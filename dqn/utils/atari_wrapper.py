@@ -7,6 +7,7 @@ import gym
 from gym import spaces
 from PIL import Image
 
+
 class NoopResetEnv(gym.Wrapper):
     def __init__(self, env=None, noop_max=30):
         """Sample initial states by taking random number of no-ops on reset.
@@ -24,6 +25,7 @@ class NoopResetEnv(gym.Wrapper):
             obs, _, _, _ = self.env.step(0)
         return obs
 
+
 class FireResetEnv(gym.Wrapper):
     def __init__(self, env=None):
         """Take action on reset for environments that are fixed until firing."""
@@ -37,6 +39,7 @@ class FireResetEnv(gym.Wrapper):
         obs, _, _, _ = self.env.step(2)
         return obs
 
+
 class EpisodicLifeEnv(gym.Wrapper):
     def __init__(self, env=None):
         """Make end-of-life == end-of-episode, but only reset on true game over.
@@ -44,7 +47,7 @@ class EpisodicLifeEnv(gym.Wrapper):
         """
         super(EpisodicLifeEnv, self).__init__(env)
         self.lives = 0
-        self.was_real_done  = True
+        self.was_real_done = True
         self.was_real_reset = False
 
     def _step(self, action):
@@ -76,13 +79,14 @@ class EpisodicLifeEnv(gym.Wrapper):
         self.lives = self.env.unwrapped.ale.lives()
         return obs
 
+
 class MaxAndSkipEnv(gym.Wrapper):
     def __init__(self, env=None, skip=4):
         """Return only every `skip`-th frame"""
         super(MaxAndSkipEnv, self).__init__(env)
         # most recent raw observations (for max pooling across time steps)
         self._obs_buffer = deque(maxlen=2)
-        self._skip       = skip
+        self._skip = skip
 
     def _step(self, action):
         total_reward = 0.0
@@ -105,6 +109,7 @@ class MaxAndSkipEnv(gym.Wrapper):
         self._obs_buffer.append(obs)
         return obs
 
+
 def _process_frame84(frame):
     img = np.reshape(frame, [210, 160, 3]).astype(np.float32)
     img = img[:, :, 0] * 0.299 + img[:, :, 1] * 0.587 + img[:, :, 2] * 0.114
@@ -114,6 +119,7 @@ def _process_frame84(frame):
     x_t = resized_screen[18:102, :]
     x_t = np.reshape(x_t, [84, 84, 1])
     return x_t.astype(np.uint8)
+
 
 class ProcessFrame84(gym.Wrapper):
     def __init__(self, env=None):
@@ -127,10 +133,12 @@ class ProcessFrame84(gym.Wrapper):
     def _reset(self):
         return _process_frame84(self.env.reset())
 
+
 class ClippedRewardsWrapper(gym.Wrapper):
     def _step(self, action):
         obs, reward, done, info = self.env.step(action)
         return obs, np.sign(reward), done, info
+
 
 def wrap_deepmind_ram(env):
     env = EpisodicLifeEnv(env)
@@ -140,6 +148,7 @@ def wrap_deepmind_ram(env):
         env = FireResetEnv(env)
     env = ClippedRewardsWrapper(env)
     return env
+
 
 def wrap_deepmind(env):
     assert 'NoFrameskip' in env.spec.id
