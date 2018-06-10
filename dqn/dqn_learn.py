@@ -126,6 +126,10 @@ def dqn_learing(
     ######
 
     # YOUR CODE HERE
+    input_channel = 4  # TODO maybe something else
+    Q = q_func(input_channel, num_actions)
+    # TODO initialize both target and non-target
+    # TODO use this: http://rl-tau-2018.wdfiles.com/local--files/general-information/rl-2018-hw3.pdf
 
     ######
 
@@ -181,6 +185,14 @@ def dqn_learing(
         #####
 
         # YOUR CODE HERE
+        action = select_epilson_greedy_action(Q, last_obs, t)
+
+        obs, reward, done, info = env.step(action)
+
+        if done:
+            obs = env.reset()
+
+        last_obs = obs
 
         #####
 
