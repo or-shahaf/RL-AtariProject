@@ -9,7 +9,7 @@ from utils.schedule import LinearSchedule
 BATCH_SIZE = 32
 GAMMA = 0.99
 REPLAY_BUFFER_SIZE = 1000000
-LEARNING_STARTS = 50000
+LEARNING_STARTS = 5000  # TODO originally *10
 LEARNING_FREQ = 4
 FRAME_HISTORY_LEN = 1
 TARGER_UPDATE_FREQ = 10000
@@ -54,5 +54,8 @@ if __name__ == '__main__':
     # Run training
     seed = 0  # Use a seed of zero (you may want to randomize the seed!)
     env = get_ram_env(env, seed)
+
+    # do not record videos:
+    get_wrapper_by_name(env, "Monitor").video_callable = lambda episode_id: False
 
     main(env)

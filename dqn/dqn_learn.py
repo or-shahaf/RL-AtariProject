@@ -18,7 +18,8 @@ from utils.replay_buffer import ReplayBuffer
 from utils.gym import get_wrapper_by_name
 
 USE_CUDA = torch.cuda.is_available()
-dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+device = torch.device("cuda" if USE_CUDA else "cpu")
+torch_types = torch.cuda if USE_CUDA else torch
 
 
 class Variable(autograd.Variable):
@@ -116,7 +117,7 @@ def dqn_learing(
         sample = random.random()
         eps_threshold = exploration.value(t)
         if sample > eps_threshold:
-            obs = torch.from_numpy(obs).type(dtype).unsqueeze(0) / 255.0
+            obs = torch.from_numpy(obs).type(torch_types.FloatTensor).unsqueeze(0) / 255.0
             # Use volatile = True if variable is only used in inference mode, i.e. don’t save the history
             return model(Variable(obs, volatile=True)).data.max(1)[1].cpu()
         else:
@@ -126,15 +127,15 @@ def dqn_learing(
     ######
 
     # YOUR CODE HERE
-    input_channel = 4  # TODO maybe something else
-    Q = q_func(input_channel, num_actions)
-    # TODO initialize both target and non-target
-    # TODO use this: http://rl-tau-2018.wdfiles.com/local--files/general-information/rl-2018-hw3.pdf
+    policy_net = q_func(input_arg, num_actions).to(device)
+    target_net = q_func(input_arg, num_actions).to(device)
+    target_net.load_state_dict(policy_net.state_dict())
+    target_net.eval()
 
     ######
 
-    # Construct Q network optimizer function
-    optimizer = optimizer_spec.constructor(Q.parameters(), **optimizer_spec.kwargs)
+    # Construct policy_net network optimizer function
+    optimizer = optimizer_spec.constructor(policy_net.parameters(), **optimizer_spec.kwargs)
 
     # Construct the replay buffer
     replay_buffer = ReplayBuffer(replay_buffer_size, frame_history_len)
@@ -185,9 +186,12 @@ def dqn_learing(
         #####
 
         # YOUR CODE HERE
-        action = select_epilson_greedy_action(Q, last_obs, t)
+        stored_frame_idx = replay_buffer.store_frame(last_obs)
+        last_obs_encoded = replay_buffer.encode_recent_observation()
+        action = select_epilson_greedy_action(policy_net, last_obs_encoded, t)
 
         obs, reward, done, info = env.step(action)
+        replay_buffer.store_effect(stored_frame_idx, action, reward, done)
 
         if done:
             obs = env.reset()
@@ -207,7 +211,6 @@ def dqn_learing(
         if (t > learning_starts and
                 t % learning_freq == 0 and
                 replay_buffer.can_sample(batch_size)):
-            pass  # TODO
             # Here, you should perform training. Training consists of four steps:
             # 3.a: use the replay buffer to sample a batch of transitions (see the
             # replay buffer code for function definition, each batch that you sample
@@ -232,7 +235,40 @@ def dqn_learing(
             #####
 
             # YOUR CODE HERE
+            sample = replay_buffer.sample(batch_size)
+            obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = sample
+            obs_batch = torch.from_numpy(obs_batch).to(device).type(torch_types.FloatTensor)
+            next_obs_batch = torch.from_numpy(next_obs_batch).to(device).type(torch_types.FloatTensor)
+            act_batch = torch.from_numpy(act_batch).to(device).type(torch_types.LongTensor)
+            rew_batch = torch.from_numpy(rew_batch).to(device).type(torch_types.FloatTensor)
+            # non_final_mask = ~torch.from_numpy(done_mask).to(device).type(torch_types.ByteTensor)
 
+            # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
+            # columns of actions taken
+            state_action_values = policy_net(obs_batch).gather(1, act_batch.reshape([batch_size, 1]))
+            # state_action_values = state_action_values.reshape(batch_size)
+
+            # Compute V(s_{t+1}) for all next states.
+            next_state_values = target_net(next_obs_batch).max(1)[0].detach()
+            # Compute the expected Q values
+            expected_state_action_values = (next_state_values * gamma) + rew_batch
+
+            # Compute Huber loss
+            loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
+
+            # Optimize the model
+            optimizer.zero_grad()
+            loss.backward()
+            for param in policy_net.parameters():
+                param.grad.data.clamp_(-1, 1)
+            optimizer.step()
+
+            if done:
+                y = reward
+            else:
+                y = reward + gamma * policy_net( ).max(0)
+
+            num_param_updates += 1
             #####
 
         ### 4. Log progress and keep track of statistics
@@ -247,13 +283,13 @@ def dqn_learing(
 
         if t % LOG_EVERY_N_STEPS == 0 and t > learning_starts:
             print("Timestep %d" % (t,))
-            print("mean reward (100 episodes) %f" % mean_episode_reward)
-            print("best mean reward %f" % best_mean_episode_reward)
-            print("episodes %d" % len(episode_rewards))
-            print("exploration %f" % exploration.value(t))
+            print("  mean reward (100 episodes) %f" % mean_episode_reward)
+            print("  best mean reward %f" % best_mean_episode_reward)
+            print("  episodes %d" % len(episode_rewards))
+            print("  exploration %f" % exploration.value(t))
             sys.stdout.flush()
 
             # Dump statistics to pickle
             with open('statistics.pkl', 'wb') as f:
                 pickle.dump(Statistic, f)
-                print("Saved to %s" % 'statistics.pkl')
+                print("  Saved to %s" % 'statistics.pkl')

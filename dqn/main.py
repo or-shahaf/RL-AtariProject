@@ -58,4 +58,7 @@ if __name__ == '__main__':
     seed = 0  # Use a seed of zero (you may want to randomize the seed!) # TODO
     env = get_env(task, seed)
 
+    # do not record videos:
+    get_wrapper_by_name(env, "Monitor").video_callable = lambda episode_id: False
+
     main(env, task.max_timesteps)
