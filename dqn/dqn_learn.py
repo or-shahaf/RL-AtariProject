@@ -241,7 +241,12 @@ def dqn_learing(
             next_obs_batch = torch.from_numpy(next_obs_batch).to(device).type(torch_types.FloatTensor)
             act_batch = torch.from_numpy(act_batch).to(device).type(torch_types.LongTensor)
             rew_batch = torch.from_numpy(rew_batch).to(device).type(torch_types.FloatTensor)
-            # non_final_mask = ~torch.from_numpy(done_mask).to(device).type(torch_types.ByteTensor)
+            non_final_mask = ~torch.from_numpy(done_mask).to(device).type(torch_types.ByteTensor)
+
+            non_final_next_states = next_obs_batch.masked_select(
+                non_final_mask.unsqueeze(1)).reshape([-1, 128])  # TODO fix to work for main.py
+
+            # inspired by https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html:
 
             # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
             # columns of actions taken
@@ -249,26 +254,25 @@ def dqn_learing(
             # state_action_values = state_action_values.reshape(batch_size)
 
             # Compute V(s_{t+1}) for all next states.
+            next_state_values = torch.zeros(batch_size, device=device)
+            next_state_values[non_final_mask] = target_net(non_final_next_states).max(1)[0].detach()
             next_state_values = target_net(next_obs_batch).max(1)[0].detach()
             # Compute the expected Q values
             expected_state_action_values = (next_state_values * gamma) + rew_batch
 
-            # Compute Huber loss
-            loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
+            # Compute loss
+            bellman_error = expected_state_action_values - state_action_values
+            d_error = -bellman_error.clamp(-1, 1)
 
             # Optimize the model
             optimizer.zero_grad()
-            loss.backward()
-            for param in policy_net.parameters():
-                param.grad.data.clamp_(-1, 1)
+            state_action_values.backward(d_error)
             optimizer.step()
 
-            if done:
-                y = reward
-            else:
-                y = reward + gamma * policy_net( ).max(0)
-
             num_param_updates += 1
+            if num_param_updates % target_update_freq == 0:
+                target_net.load_state_dict(policy_net.state_dict())
+                print("Updated target Q network")
             #####
 
         ### 4. Log progress and keep track of statistics
