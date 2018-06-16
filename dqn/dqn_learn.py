@@ -247,9 +247,16 @@ def dqn_learing(
             non_final_mask = ~torch.from_numpy(done_mask).to(device).type(torch_types.ByteTensor)
 
             # filter `next_obs_batch` to only get next states of non-terminal episodes
-            # TODO I'll double check it
-            non_final_next_states = next_obs_batch.masked_select(
-                non_final_mask.unsqueeze(1)).reshape([-1, 128])  # TODO fix to work for main.py
+            # TODO fix dimensions
+            non_final_next_states = next_obs_batch. \
+                masked_select(non_final_mask.reshape((-1,) + len(next_obs_batch.size()) * (1,))). \
+                reshape((-1,) + next_obs_batch.size()[1:])
+            # if len(env.observation_space.shape) == 1:
+            #     # This means we are running on low-dimensional observations (e.g. RAM)
+            #     non_final_next_states = non_final_next_states.reshape([-1, input_arg])
+            # else:
+            #     img_h, img_w, img_c = env.observation_space.shape
+            #     non_final_next_states = non_final_next_states.reshape([-1, img_h, img_w, img_c])
 
             # inspired by https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html:
 
