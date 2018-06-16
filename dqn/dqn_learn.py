@@ -127,10 +127,11 @@ def dqn_learing(
     ######
 
     # YOUR CODE HERE
-    policy_net = q_func(input_arg, num_actions).to(device)
-    target_net = q_func(input_arg, num_actions).to(device)
-    target_net.load_state_dict(policy_net.state_dict())
-    target_net.eval()
+    policy_net = q_func(input_arg, num_actions).to(device)  # Q network
+    target_net = q_func(input_arg, num_actions).to(device)  # Q target
+    target_net.load_state_dict(policy_net.state_dict())  # copies the state of policy Q into target
+    target_net.eval()  # `eval` is probably not needed because the q_func doesn't have
+    # batchnorm/dropout layers, but this is just in case for now
 
     ######
 
@@ -236,13 +237,17 @@ def dqn_learing(
 
             # YOUR CODE HERE
             sample = replay_buffer.sample(batch_size)
-            obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = sample
+            obs_batch, actions_batch, rewards_batch, next_obs_batch, done_mask = sample
+
+            # convert batches to pytorch tensors:
             obs_batch = torch.from_numpy(obs_batch).to(device).type(torch_types.FloatTensor)
             next_obs_batch = torch.from_numpy(next_obs_batch).to(device).type(torch_types.FloatTensor)
-            act_batch = torch.from_numpy(act_batch).to(device).type(torch_types.LongTensor)
-            rew_batch = torch.from_numpy(rew_batch).to(device).type(torch_types.FloatTensor)
+            actions_batch = torch.from_numpy(actions_batch).to(device).type(torch_types.LongTensor)
+            rewards_batch = torch.from_numpy(rewards_batch).to(device).type(torch_types.FloatTensor)
             non_final_mask = ~torch.from_numpy(done_mask).to(device).type(torch_types.ByteTensor)
 
+            # filter `next_obs_batch` to only get next states of non-terminal episodes
+            # TODO I'll double check it
             non_final_next_states = next_obs_batch.masked_select(
                 non_final_mask.unsqueeze(1)).reshape([-1, 128])  # TODO fix to work for main.py
 
@@ -250,15 +255,13 @@ def dqn_learing(
 
             # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
             # columns of actions taken
-            state_action_values = policy_net(obs_batch).gather(1, act_batch.reshape([batch_size, 1]))
-            # state_action_values = state_action_values.reshape(batch_size)
+            state_action_values = policy_net(obs_batch).gather(1, actions_batch.unsqueeze(1))
 
             # Compute V(s_{t+1}) for all next states.
             next_state_values = torch.zeros(batch_size, device=device)
             next_state_values[non_final_mask] = target_net(non_final_next_states).max(1)[0].detach()
-            next_state_values = target_net(next_obs_batch).max(1)[0].detach()
             # Compute the expected Q values
-            expected_state_action_values = (next_state_values * gamma) + rew_batch
+            expected_state_action_values = (next_state_values * gamma) + rewards_batch
 
             # Compute loss
             bellman_error = expected_state_action_values - state_action_values
@@ -270,8 +273,10 @@ def dqn_learing(
             optimizer.step()
 
             num_param_updates += 1
+            # Periodically update target network:
             if num_param_updates % target_update_freq == 0:
                 target_net.load_state_dict(policy_net.state_dict())
+                target_net.eval()
                 print("Updated target Q network")
             #####
 
