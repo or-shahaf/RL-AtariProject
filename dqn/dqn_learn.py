@@ -257,7 +257,7 @@ def dqn_learing(
             expected_state_action_values = (next_state_values * gamma) + rewards_batch
 
             # Compute loss
-            d_error = state_action_values - expected_state_action_values
+            d_error = state_action_values - expected_state_action_values  # = -bellman_error
             d_error.clamp_(-1, 1)
 
             # Optimize the model
