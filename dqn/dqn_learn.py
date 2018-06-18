@@ -120,7 +120,8 @@ def dqn_learing(
         if sample > eps_threshold:
             obs = torch.from_numpy(obs).type(torch_types.FloatTensor).unsqueeze(0) / 255.0
             # Use volatile = True if variable is only used in inference mode, i.e. don’t save the history
-            return model(Variable(obs, volatile=True)).data.max(1)[1].cpu()
+            with torch.no_grad():
+                return model(Variable(obs)).data.max(1)[1].cpu()
         else:
             return random.randrange(num_actions)
 
