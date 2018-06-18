@@ -1,6 +1,7 @@
 """
     This file is copied/apdated from https://github.com/berkeleydeeprlcourse/homework/tree/master/hw3
 """
+import json
 import sys
 import pickle
 import numpy as np
@@ -244,28 +245,14 @@ def dqn_learing(
             rewards_batch = torch.from_numpy(rewards_batch).to(device).type(torch_types.FloatTensor)
             non_final_mask = 1 - torch.from_numpy(done_mask).to(device).type(torch_types.FloatTensor)
 
-            # filter `next_obs_batch` to only get next states of non-terminal episodes
-            # TODO fix dimensions
-            # non_final_next_states = next_obs_batch. \
-            #     masked_select(non_final_mask.reshape((-1,) + len(next_obs_batch.size()) * (1,))). \
-            #     reshape((-1,) + next_obs_batch.size()[1:])
-            # if len(env.observation_space.shape) == 1:
-            #     # This means we are running on low-dimensional observations (e.g. RAM)
-            #     non_final_next_states = non_final_next_states.reshape([-1, input_arg])
-            # else:
-            #     img_h, img_w, img_c = env.observation_space.shape
-            #     non_final_next_states = non_final_next_states.reshape([-1, img_h, img_w, img_c])
-
             # inspired by https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html:
 
             # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
             # columns of actions taken
-            state_action_values = policy_net(obs_batch).gather(1, actions_batch.unsqueeze(1))
+            state_action_values = policy_net(obs_batch).gather(1, actions_batch.unsqueeze(1)).squeeze(1)
 
             # Compute V(s_{t+1}) for all next states.
             next_state_values = target_net(next_obs_batch).max(1)[0].detach() * non_final_mask
-            # next_state_values = torch.zeros(batch_size, device=device)
-            # next_state_values[non_final_mask] = target_net(non_final_next_states).max(1)[0].detach()
             # Compute the expected Q values
             expected_state_action_values = (next_state_values * gamma) + rewards_batch
 
@@ -282,7 +269,11 @@ def dqn_learing(
             # Periodically update target network:
             if num_param_updates % target_update_freq == 0:
                 target_net.load_state_dict(policy_net.state_dict())
-                print("--Updated target Q network")
+
+            if num_param_updates % (10 * LOG_EVERY_N_STEPS) == 0:
+                print("-- Q network: {}".format(json.dumps({
+                    key: list(value.view(-1).numpy().astype(np.float)[:10]) for key, value in policy_net.state_dict().items()},
+                    indent=4, sort_keys=True)).replace('\n', '\n-- '))
             #####
 
         ### 4. Log progress and keep track of statistics
