@@ -19,7 +19,6 @@ from utils.replay_buffer import ReplayBuffer
 from utils.gym import get_wrapper_by_name
 
 USE_CUDA = torch.cuda.is_available()
-device = torch.device("cuda" if USE_CUDA else "cpu")
 torch_types = torch.cuda if USE_CUDA else torch
 
 
@@ -129,8 +128,8 @@ def dqn_learing(
     ######
 
     # YOUR CODE HERE
-    policy_net = q_func(input_arg, num_actions).to(device).type(torch_types.FloatTensor)  # Q
-    target_net = q_func(input_arg, num_actions).to(device).type(torch_types.FloatTensor)  # Q target
+    policy_net = q_func(input_arg, num_actions).type(torch_types.FloatTensor)  # Q
+    target_net = q_func(input_arg, num_actions).type(torch_types.FloatTensor)  # Q target
     target_net.load_state_dict(policy_net.state_dict())  # copies the state of policy Q into target
 
     ######
@@ -240,11 +239,11 @@ def dqn_learing(
             obs_batch, actions_batch, rewards_batch, next_obs_batch, done_mask = sample
 
             # convert batches to pytorch tensors:
-            obs_batch = torch.from_numpy(obs_batch).to(device).type(torch_types.FloatTensor) / 255.0
-            next_obs_batch = torch.from_numpy(next_obs_batch).to(device).type(torch_types.FloatTensor) / 255.0
-            actions_batch = torch.from_numpy(actions_batch).to(device).type(torch_types.LongTensor)
-            rewards_batch = torch.from_numpy(rewards_batch).to(device).type(torch_types.FloatTensor)
-            non_final_mask = 1 - torch.from_numpy(done_mask).to(device).type(torch_types.FloatTensor)
+            obs_batch = Variable(torch.from_numpy(obs_batch).type(torch_types.FloatTensor)) / 255.0
+            next_obs_batch = Variable(torch.from_numpy(next_obs_batch).type(torch_types.FloatTensor)) / 255.0
+            actions_batch = Variable(torch.from_numpy(actions_batch).type(torch_types.LongTensor))
+            rewards_batch = Variable(torch.from_numpy(rewards_batch).type(torch_types.FloatTensor))
+            non_final_mask = 1 - Variable(torch.from_numpy(done_mask).type(torch_types.FloatTensor))
 
             # inspired by https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html:
 
