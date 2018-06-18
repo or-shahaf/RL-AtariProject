@@ -130,8 +130,6 @@ def dqn_learing(
     policy_net = q_func(input_arg, num_actions).to(device).type(torch_types.FloatTensor)  # Q
     target_net = q_func(input_arg, num_actions).to(device).type(torch_types.FloatTensor)  # Q target
     target_net.load_state_dict(policy_net.state_dict())  # copies the state of policy Q into target
-    target_net.eval()  # `eval` is probably not needed because the q_func doesn't have
-    # batchnorm/dropout layers, but this is just in case for now
 
     ######
 
@@ -284,8 +282,7 @@ def dqn_learing(
             # Periodically update target network:
             if num_param_updates % target_update_freq == 0:
                 target_net.load_state_dict(policy_net.state_dict())
-                target_net.eval()
-                print("Updated target Q network")
+                print("--Updated target Q network")
             #####
 
         ### 4. Log progress and keep track of statistics
