@@ -121,14 +121,14 @@ def dqn_learing(
             # Use volatile = True if variable is only used in inference mode, i.e. don’t save the history
             return model(Variable(obs, volatile=True)).data.max(1)[1].cpu()
         else:
-            return torch.IntTensor([[random.randrange(num_actions)]])
+            return random.randrange(num_actions)
 
     # Initialize target q function and q function, i.e. build the model.
     ######
 
     # YOUR CODE HERE
-    policy_net = q_func(input_arg, num_actions).to(device)  # Q network
-    target_net = q_func(input_arg, num_actions).to(device)  # Q target
+    policy_net = q_func(input_arg, num_actions).to(device).type(torch_types.FloatTensor)  # Q
+    target_net = q_func(input_arg, num_actions).to(device).type(torch_types.FloatTensor)  # Q target
     target_net.load_state_dict(policy_net.state_dict())  # copies the state of policy Q into target
     target_net.eval()  # `eval` is probably not needed because the q_func doesn't have
     # batchnorm/dropout layers, but this is just in case for now
@@ -240,17 +240,17 @@ def dqn_learing(
             obs_batch, actions_batch, rewards_batch, next_obs_batch, done_mask = sample
 
             # convert batches to pytorch tensors:
-            obs_batch = torch.from_numpy(obs_batch).to(device).type(torch_types.FloatTensor)
-            next_obs_batch = torch.from_numpy(next_obs_batch).to(device).type(torch_types.FloatTensor)
+            obs_batch = torch.from_numpy(obs_batch).to(device).type(torch_types.FloatTensor) / 255.0
+            next_obs_batch = torch.from_numpy(next_obs_batch).to(device).type(torch_types.FloatTensor) / 255.0
             actions_batch = torch.from_numpy(actions_batch).to(device).type(torch_types.LongTensor)
             rewards_batch = torch.from_numpy(rewards_batch).to(device).type(torch_types.FloatTensor)
-            non_final_mask = ~torch.from_numpy(done_mask).to(device).type(torch_types.ByteTensor)
+            non_final_mask = 1 - torch.from_numpy(done_mask).to(device).type(torch_types.FloatTensor)
 
             # filter `next_obs_batch` to only get next states of non-terminal episodes
             # TODO fix dimensions
-            non_final_next_states = next_obs_batch. \
-                masked_select(non_final_mask.reshape((-1,) + len(next_obs_batch.size()) * (1,))). \
-                reshape((-1,) + next_obs_batch.size()[1:])
+            # non_final_next_states = next_obs_batch. \
+            #     masked_select(non_final_mask.reshape((-1,) + len(next_obs_batch.size()) * (1,))). \
+            #     reshape((-1,) + next_obs_batch.size()[1:])
             # if len(env.observation_space.shape) == 1:
             #     # This means we are running on low-dimensional observations (e.g. RAM)
             #     non_final_next_states = non_final_next_states.reshape([-1, input_arg])
@@ -265,8 +265,9 @@ def dqn_learing(
             state_action_values = policy_net(obs_batch).gather(1, actions_batch.unsqueeze(1))
 
             # Compute V(s_{t+1}) for all next states.
-            next_state_values = torch.zeros(batch_size, device=device)
-            next_state_values[non_final_mask] = target_net(non_final_next_states).max(1)[0].detach()
+            next_state_values = target_net(next_obs_batch).max(1)[0].detach() * non_final_mask
+            # next_state_values = torch.zeros(batch_size, device=device)
+            # next_state_values[non_final_mask] = target_net(non_final_next_states).max(1)[0].detach()
             # Compute the expected Q values
             expected_state_action_values = (next_state_values * gamma) + rewards_batch
 
