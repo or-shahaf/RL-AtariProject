@@ -277,7 +277,7 @@ def dqn_learing(
 
             # Optimize the model
             optimizer.zero_grad()
-            state_action_values.backward(d_error.data.unsqueeze(1))
+            state_action_values.backward(d_error)
             optimizer.step()
 
             num_param_updates += 1
