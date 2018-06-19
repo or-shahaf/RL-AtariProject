@@ -22,6 +22,7 @@ device = torch.device("cuda" if USE_CUDA else "cpu")
 torch_types = torch.cuda if USE_CUDA else torch
 
 STATISTICS_FILE_NAME = " ".join(sys.argv).replace('/', '-').replace('\\', '-') + '.pkl'
+print("STATISTICS_FILE_NAME: {}".format(STATISTICS_FILE_NAME))
 
 
 class Variable(autograd.Variable):
