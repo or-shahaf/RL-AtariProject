@@ -1,7 +1,6 @@
 """
     This file is copied/apdated from https://github.com/berkeleydeeprlcourse/homework/tree/master/hw3
 """
-import json
 import sys
 import pickle
 import numpy as np
@@ -270,11 +269,6 @@ def dqn_learing(
             # Periodically update target network:
             if num_param_updates % target_update_freq == 0:
                 target_net.load_state_dict(policy_net.state_dict())
-
-            if num_param_updates % (10 * LOG_EVERY_N_STEPS) == 0:
-                print("-- Q network: {}".format(json.dumps({
-                    key: list(value.view(-1).numpy().astype(np.float)[:10]) for key, value in policy_net.state_dict().items()},
-                    indent=4, sort_keys=True)).replace('\n', '\n-- '))
             #####
 
         ### 4. Log progress and keep track of statistics
