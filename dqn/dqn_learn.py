@@ -21,6 +21,8 @@ USE_CUDA = torch.cuda.is_available()
 device = torch.device("cuda" if USE_CUDA else "cpu")
 torch_types = torch.cuda if USE_CUDA else torch
 
+STATISTICS_FILE_NAME = " ".join(sys.argv[1:]).replace('/', '-').replace('\\', '-') + '.pkl'
+
 
 class Variable(autograd.Variable):
     def __init__(self, data, *args, **kwargs):
@@ -290,6 +292,5 @@ def dqn_learing(
             sys.stdout.flush()
 
             # Dump statistics to pickle
-            with open('statistics.pkl', 'wb') as f:
+            with open(STATISTICS_FILE_NAME, 'wb') as f:
                 pickle.dump(Statistic, f)
-                print("  Saved to %s" % 'statistics.pkl')
