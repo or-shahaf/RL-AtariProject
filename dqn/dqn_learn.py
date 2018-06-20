@@ -308,4 +308,3 @@ def dqn_learing(
             except Exception as e:
                 print("couldn't download statistics: {!r}".format(e))
                 print(os.listdir('.'))
-                raise
