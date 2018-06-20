@@ -29,7 +29,8 @@ def main(env, num_timesteps):
         kwargs=dict(lr=LEARNING_RATE, alpha=ALPHA, eps=EPS),
     )
 
-    exploration_schedule = LinearSchedule(1000000, 0.1)
+    # average exploration is the same as InverseExponentialSchedule(0.1, 1000000) over 2m steps
+    exploration_schedule = LinearSchedule(511003, 0.1)
 
     dqn_learing(
         env=env,
@@ -61,5 +62,5 @@ if __name__ == '__main__':
     # do not record videos:
     get_wrapper_by_name(env, "Monitor").video_callable = lambda episode_id: False
 
-    print("start")
+    print("start; max_timesteps = {}".format(task.max_timesteps))
     main(env, task.max_timesteps)
