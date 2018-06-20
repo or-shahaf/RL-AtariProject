@@ -29,7 +29,7 @@ def main(env, num_timesteps):
         kwargs=dict(lr=LEARNING_RATE, alpha=ALPHA, eps=EPS),
     )
 
-    max_piece_timestamp = 1000001
+    max_piece_timestamp = 1000002
     exploration_schedule = PiecewiseSchedule([(0, 1),
                                               (max_piece_timestamp // 3, 0.8),
                                               (2 * max_piece_timestamp // 3, 0.3),
