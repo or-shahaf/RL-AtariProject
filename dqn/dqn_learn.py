@@ -1,6 +1,7 @@
 """
     This file is copied/apdated from https://github.com/berkeleydeeprlcourse/homework/tree/master/hw3
 """
+import os
 import sys
 import pickle
 import numpy as np
@@ -298,15 +299,13 @@ def dqn_learing(
             with open(STATISTICS_FILE_NAME, 'wb') as f:
                 pickle.dump(Statistic, f)
 
-        if t % DOWNLOAD_STATISTICS_EVERY_N_STEPS == 0 or t == learning_starts:
-            if t == learning_starts:
-                with open(STATISTICS_FILE_NAME, 'wb') as f:
-                    pickle.dump(Statistic, f)
-
+        if (t % DOWNLOAD_STATISTICS_EVERY_N_STEPS == 0 and t > 0) or t == learning_starts:
             try:
                 from google.colab import files
-                files.download(STATISTICS_FILE_NAME)
+                files.download(os.path.abspath(STATISTICS_FILE_NAME))
+            except ImportError as e:
+                print("couldn't download statistics: {!r}".format(e))
             except Exception as e:
                 print("couldn't download statistics: {!r}".format(e))
-                import os
                 print(os.listdir('.'))
+                raise
