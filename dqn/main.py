@@ -29,7 +29,7 @@ def main(env, num_timesteps):
         kwargs=dict(lr=LEARNING_RATE, alpha=ALPHA, eps=EPS),
     )
 
-    exploration_schedule = utils.schedule.InverseExponentialSchedule(0.1, num_timesteps)
+    exploration_schedule = utils.schedule.InverseExponentialSchedule(0.1, 1000000)
 
     dqn_learing(
         env=env,
