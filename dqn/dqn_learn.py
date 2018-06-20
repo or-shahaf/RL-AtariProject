@@ -21,7 +21,7 @@ USE_CUDA = torch.cuda.is_available()
 device = torch.device("cuda" if USE_CUDA else "cpu")
 torch_types = torch.cuda if USE_CUDA else torch
 
-STATISTICS_FILE_NAME = " ".join(sys.argv).replace('/', '-').replace('\\', '-') + '.pkl'
+STATISTICS_FILE_NAME = " ".join(sys.argv[1:]).translate(str.maketrans(r'\:/', '---')) + '.pkl'
 print("STATISTICS_FILE_NAME: {}".format(STATISTICS_FILE_NAME))
 
 
