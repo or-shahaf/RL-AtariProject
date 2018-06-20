@@ -31,8 +31,8 @@ def main(env, num_timesteps):
 
     max_piece_timestamp = 1000002
     exploration_schedule = PiecewiseSchedule([(0, 1),
-                                              (max_piece_timestamp // 3, 0.8),
-                                              (2 * max_piece_timestamp // 3, 0.3),
+                                              (max_piece_timestamp // 3, 0.95),
+                                              (2 * max_piece_timestamp // 3, 0.15),
                                               (max_piece_timestamp, 0.1)],
                                              outside_value=0.1)
 
