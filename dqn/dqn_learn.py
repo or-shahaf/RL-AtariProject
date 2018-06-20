@@ -301,10 +301,9 @@ def dqn_learing(
 
         if (t % DOWNLOAD_STATISTICS_EVERY_N_STEPS == 0 and t > 0) or t == learning_starts:
             try:
-                from google.colab import files
-                files.download(os.path.abspath(STATISTICS_FILE_NAME))
-            except ImportError as e:
-                print("couldn't download statistics: {!r}".format(e))
+                os.system("git add {}".format(STATISTICS_FILE_NAME))
+                os.system('git commit -m "saved statistics"')
+                os.system("git push")
             except Exception as e:
-                print("couldn't download statistics: {!r}".format(e))
+                print("couldn't keep statistics: {!r}".format(e))
                 print(os.listdir('.'))
