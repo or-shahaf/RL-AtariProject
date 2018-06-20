@@ -1,6 +1,7 @@
 """
     This file is copied/apdated from https://github.com/berkeleydeeprlcourse/homework/tree/master/hw3
 """
+import os
 import sys
 import pickle
 import numpy as np
@@ -21,8 +22,11 @@ USE_CUDA = torch.cuda.is_available()
 device = torch.device("cuda" if USE_CUDA else "cpu")
 torch_types = torch.cuda if USE_CUDA else torch
 
-STATISTICS_FILE_NAME = " ".join(sys.argv[1:]).translate(str.maketrans(r'\:/', '---')) + '.pkl'
+STATISTICS_FILE_NAME = " ".join(sys.argv[1:] or ["statistics"]).translate(
+    str.maketrans(r'\:/', '---')) + '.pkl'
 print("STATISTICS_FILE_NAME: {}".format(STATISTICS_FILE_NAME))
+DOWNLOAD_STATISTICS_EVERY_N_STEPS = 250000
+LOG_EVERY_N_STEPS = 10000
 
 
 class Variable(autograd.Variable):
@@ -150,7 +154,6 @@ def dqn_learing(
     mean_episode_reward = -float('nan')
     best_mean_episode_reward = -float('inf')
     last_obs = env.reset()
-    LOG_EVERY_N_STEPS = 10000
 
     for t in count():
         ### 1. Check stopping criterion
@@ -284,7 +287,7 @@ def dqn_learing(
         Statistic["mean_episode_rewards"].append(mean_episode_reward)
         Statistic["best_mean_episode_rewards"].append(best_mean_episode_reward)
 
-        if t % LOG_EVERY_N_STEPS == 0 and t > learning_starts:
+        if t % LOG_EVERY_N_STEPS == 0 and t >= learning_starts:
             print("Timestep %d" % (t,))
             print("  mean reward (100 episodes) %f" % mean_episode_reward)
             print("  best mean reward %f" % best_mean_episode_reward)
