@@ -24,6 +24,7 @@ torch_types = torch.cuda if USE_CUDA else torch
 STATISTICS_FILE_NAME = " ".join(sys.argv[1:] or ["statistics"]).translate(
     str.maketrans(r'\:/', '---')) + '.pkl'
 print("STATISTICS_FILE_NAME: {}".format(STATISTICS_FILE_NAME))
+DOWNLOAD_STATISTICS_EVERY_N_STEPS = 1000000
 
 
 class Variable(autograd.Variable):
@@ -296,3 +297,10 @@ def dqn_learing(
             # Dump statistics to pickle
             with open(STATISTICS_FILE_NAME, 'wb') as f:
                 pickle.dump(Statistic, f)
+
+        if t % DOWNLOAD_STATISTICS_EVERY_N_STEPS == 0 or t == learning_starts:
+            try:
+                from google.colab import files
+                files.download(STATISTICS_FILE_NAME)
+            except ImportError:
+                pass
