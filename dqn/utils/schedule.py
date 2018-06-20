@@ -1,6 +1,7 @@
 """
     This file is copied/apdated from https://github.com/berkeleydeeprlcourse/homework/tree/master/hw3
 """
+import math
 
 
 class Schedule(object):
@@ -88,3 +89,20 @@ class LinearSchedule(object):
         """See Schedule.value"""
         fraction = min(float(t) / self.schedule_timesteps, 1.0)
         return self.initial_p + fraction * (self.final_p - self.initial_p)
+
+
+class InverseExponentialSchedule(object):
+    def __init__(self, example, timesteps_to_example):
+        """
+
+        Parameters
+        ----------
+        example: float
+            A number strictly between 0 to 1.
+        timesteps_to_example: int
+            Number of timesteps when the example should be returned as the value.
+        """
+        self.t_multiplier = math.log(example) / timesteps_to_example
+
+    def value(self, t):
+        return math.exp(t * self.t_multiplier)
