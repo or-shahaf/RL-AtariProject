@@ -298,12 +298,3 @@ def dqn_learing(
             # Dump statistics to pickle
             with open(STATISTICS_FILE_NAME, 'wb') as f:
                 pickle.dump(Statistic, f)
-
-        if (t % DOWNLOAD_STATISTICS_EVERY_N_STEPS == 0 and t > 1000000) or t == learning_starts:
-            try:
-                os.system("git add {}".format(STATISTICS_FILE_NAME))
-                os.system('git commit -m "saved statistics"')
-                os.system("git push")
-            except Exception as e:
-                print("couldn't keep statistics: {!r}".format(e))
-                print(os.listdir('.'))

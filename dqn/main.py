@@ -62,4 +62,4 @@ if __name__ == '__main__':
     get_wrapper_by_name(env, "Monitor").video_callable = lambda episode_id: False
 
     print("start")
-    main(env, min(task.max_timesteps, 4000010))
+    main(env, min(task.max_timesteps, 2000010))
