@@ -25,7 +25,7 @@ torch_types = torch.cuda if USE_CUDA else torch
 STATISTICS_FILE_NAME = " ".join(sys.argv[1:] or ["statistics"]).translate(
     str.maketrans(r'\:/', '---')) + '.pkl'
 print("STATISTICS_FILE_NAME: {}".format(STATISTICS_FILE_NAME))
-DOWNLOAD_STATISTICS_EVERY_N_STEPS = 1000000
+DOWNLOAD_STATISTICS_EVERY_N_STEPS = 250000
 LOG_EVERY_N_STEPS = 10000
 
 
@@ -299,7 +299,7 @@ def dqn_learing(
             with open(STATISTICS_FILE_NAME, 'wb') as f:
                 pickle.dump(Statistic, f)
 
-        if (t % DOWNLOAD_STATISTICS_EVERY_N_STEPS == 0 and t > 0) or t == learning_starts:
+        if (t % DOWNLOAD_STATISTICS_EVERY_N_STEPS == 0 and t > 1000000) or t == learning_starts:
             try:
                 os.system("git add {}".format(STATISTICS_FILE_NAME))
                 os.system('git commit -m "saved statistics"')
