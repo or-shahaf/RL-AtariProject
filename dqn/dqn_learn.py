@@ -25,6 +25,7 @@ STATISTICS_FILE_NAME = " ".join(sys.argv[1:] or ["statistics"]).translate(
     str.maketrans(r'\:/', '---')) + '.pkl'
 print("STATISTICS_FILE_NAME: {}".format(STATISTICS_FILE_NAME))
 DOWNLOAD_STATISTICS_EVERY_N_STEPS = 1000000
+LOG_EVERY_N_STEPS = 10000
 
 
 class Variable(autograd.Variable):
@@ -152,7 +153,6 @@ def dqn_learing(
     mean_episode_reward = -float('nan')
     best_mean_episode_reward = -float('inf')
     last_obs = env.reset()
-    LOG_EVERY_N_STEPS = 10000
 
     for t in count():
         ### 1. Check stopping criterion
@@ -299,8 +299,14 @@ def dqn_learing(
                 pickle.dump(Statistic, f)
 
         if t % DOWNLOAD_STATISTICS_EVERY_N_STEPS == 0 or t == learning_starts:
+            if t == learning_starts:
+                with open(STATISTICS_FILE_NAME, 'wb') as f:
+                    pickle.dump(Statistic, f)
+
             try:
                 from google.colab import files
                 files.download(STATISTICS_FILE_NAME)
             except Exception as e:
                 print("couldn't download statistics: {!r}".format(e))
+                import os
+                print(os.listdir('.'))
