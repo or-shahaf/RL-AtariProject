@@ -302,5 +302,5 @@ def dqn_learing(
             try:
                 from google.colab import files
                 files.download(STATISTICS_FILE_NAME)
-            except ImportError:
-                pass
+            except Exception as e:
+                print("couldn't download statistics: {!r}".format(e))
