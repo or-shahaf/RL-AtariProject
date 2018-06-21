@@ -29,7 +29,7 @@ def main(env, num_timesteps):
         kwargs=dict(lr=LEARNING_RATE, alpha=ALPHA, eps=EPS),
     )
 
-    exploration_schedule = utils.schedule.ConstantSchedule(0.05)
+    exploration_schedule = utils.schedule.ConstantSchedule(0.1)
 
     dqn_learing(
         env=env,
@@ -61,5 +61,5 @@ if __name__ == '__main__':
     # do not record videos:
     get_wrapper_by_name(env, "Monitor").video_callable = lambda episode_id: False
 
-    print("start")
+    print("start; max_timesteps = {}".format(task.max_timesteps))
     main(env, task.max_timesteps)
