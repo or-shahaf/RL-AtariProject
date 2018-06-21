@@ -21,9 +21,6 @@ USE_CUDA = torch.cuda.is_available()
 device = torch.device("cuda" if USE_CUDA else "cpu")
 torch_types = torch.cuda if USE_CUDA else torch
 
-STATISTICS_FILE_NAME = " ".join(sys.argv[1:]).translate(str.maketrans(r'\:/', '---')) + '.pkl'
-print("STATISTICS_FILE_NAME: {}".format(STATISTICS_FILE_NAME))
-
 
 class Variable(autograd.Variable):
     def __init__(self, data, *args, **kwargs):
@@ -57,7 +54,8 @@ def dqn_learing(
         learning_starts=50000,
         learning_freq=4,
         frame_history_len=4,
-        target_update_freq=10000
+        target_update_freq=10000,
+        statistics_file_name="statistics.pkl"
 ):
     """Run Deep Q-learning algorithm.
 
@@ -99,9 +97,13 @@ def dqn_learing(
     target_update_freq: int
         How many experience replay rounds (not steps!) to perform between
         each update to the target Q network
+
+    statistics_file_name: str
+        Where to store the statistics file
     """
     assert type(env.observation_space) == gym.spaces.Box
     assert type(env.action_space) == gym.spaces.Discrete
+    print("STATISTICS_FILE_NAME: {}".format(statistics_file_name))
 
     ###############
     # BUILD MODEL #
@@ -293,5 +295,5 @@ def dqn_learing(
             sys.stdout.flush()
 
             # Dump statistics to pickle
-            with open(STATISTICS_FILE_NAME, 'wb') as f:
+            with open(statistics_file_name, 'wb') as f:
                 pickle.dump(Statistic, f)

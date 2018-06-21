@@ -4,7 +4,9 @@ import torch.optim as optim
 from dqn_model import DQN
 from dqn_learn import OptimizerSpec, dqn_learing
 from utils.gym import get_env, get_wrapper_by_name
-from utils.schedule import PiecewiseSchedule
+import runs
+
+RUN_INDEX = -1
 
 BATCH_SIZE = 32
 GAMMA = 0.99
@@ -29,12 +31,10 @@ def main(env, num_timesteps):
         kwargs=dict(lr=LEARNING_RATE, alpha=ALPHA, eps=EPS),
     )
 
-    max_piece_timestamp = 1000002
-    exploration_schedule = PiecewiseSchedule([(0, 1),
-                                              (max_piece_timestamp // 3, 0.95),
-                                              (2 * max_piece_timestamp // 3, 0.15),
-                                              (max_piece_timestamp, 0.1)],
-                                             outside_value=0.1)
+    run = runs.runs[RUN_INDEX]
+    exploration_schedule = run.schedule
+
+    print("Starting {}; max_timesteps = {}".format(run.run_name, task.max_timesteps))
 
     dqn_learing(
         env=env,
@@ -49,6 +49,7 @@ def main(env, num_timesteps):
         learning_freq=LEARNING_FREQ,
         frame_history_len=FRAME_HISTORY_LEN,
         target_update_freq=TARGER_UPDATE_FREQ,
+        statistics_file_name=run.statistics_file_name
     )
 
 
@@ -60,11 +61,10 @@ if __name__ == '__main__':
     task = benchmark.tasks[3]
 
     # Run training
-    seed = 0  # Use a seed of zero (you may want to randomize the seed!) # TODO
+    seed = 0  # Use a seed of zero (you may want to randomize the seed!)
     env = get_env(task, seed)
 
     # do not record videos:
     get_wrapper_by_name(env, "Monitor").video_callable = lambda episode_id: False
 
-    print("start; max_timesteps = {}".format(task.max_timesteps))
     main(env, task.max_timesteps)
