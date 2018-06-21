@@ -286,7 +286,7 @@ def dqn_learing(
         Statistic["mean_episode_rewards"].append(mean_episode_reward)
         Statistic["best_mean_episode_rewards"].append(best_mean_episode_reward)
 
-        if t % LOG_EVERY_N_STEPS == 0 and t > learning_starts:
+        if t % LOG_EVERY_N_STEPS == 0 and t >= learning_starts:
             print("Timestep %d" % (t,))
             print("  mean reward (100 episodes) %f" % mean_episode_reward)
             print("  best mean reward %f" % best_mean_episode_reward)
