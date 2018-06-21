@@ -53,7 +53,7 @@ runs = [
         r"greedier-linear-schedule.pkl",
         schedule.LinearSchedule(511003, 0.1)),
     Run("PiecewiseSchedule([(0, 1), (333334, 0.95), (666668, 0.15), (1000002, 0.1)], 0.1)",
-        r"piecewise.pkl",
+        r"piecewise-1-.95-.15-.1.pkl",
         schedule.PiecewiseSchedule([
             (0, 1),
             (max_piece_timestamp // 3, 0.95),
@@ -62,5 +62,8 @@ runs = [
         ], outside_value=0.1)),
     Run("LinearSchedule(1500000, 0.1)",
         r"linear-1500000-0.1.pkl",
-        schedule.LinearSchedule(1500000, 0.1))
+        schedule.LinearSchedule(1500000, 0.1)),
+    Run("PiecewiseSchedule([(0, 1), (1000000, 0.1)], 0)",
+        "piecewise-1-.1-0.pkl",
+        schedule.PiecewiseSchedule([(0, 1), (1000000, 0.1)], outside_value=0.00))
 ]
