@@ -29,7 +29,8 @@ def main(env, num_timesteps):
         kwargs=dict(lr=LEARNING_RATE, alpha=ALPHA, eps=EPS),
     )
 
-    exploration_schedule = utils.schedule.ConstantSchedule(0.1)
+    exploration_schedule = utils.schedule.PiecewiseSchedule(
+        [(0, 1), (1000000, 0.1)], outside_value=0.00)
 
     dqn_learing(
         env=env,
